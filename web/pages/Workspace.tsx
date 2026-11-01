@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Button, Dropdown, Grid, Input, Modal, Popconfirm, Spin } from 'antd';
+import { Alert, Button, Dropdown, Grid, Input, Modal, Popconfirm, Spin, Tooltip } from 'antd';
 import { ArrowLeftOutlined, DeleteOutlined, EditOutlined, MenuOutlined } from '@ant-design/icons';
 import type { TextAreaRef } from 'antd/es/input/TextArea';
 import { useTranslation } from 'react-i18next';
@@ -265,10 +265,14 @@ function ConversationRow({ item, selected, locale, untitled, renameLabel, delete
       {item.preview && <p>{item.preview}</p>}
     </button>
     <span className="workspace-item-actions">
-      <Button type="text" size="small" onClick={onRename}>{renameLabel}</Button>
-      <Popconfirm title={confirm} okText={deleteLabel} onConfirm={onDelete}>
-        <Button type="text" size="small" danger>{deleteLabel}</Button>
-      </Popconfirm>
+      <Tooltip title={renameLabel}>
+        <Button type="text" shape="circle" size="small" icon={<EditOutlined />} aria-label={renameLabel} onClick={onRename} />
+      </Tooltip>
+      <Tooltip title={deleteLabel}>
+        <Popconfirm title={confirm} okText={deleteLabel} onConfirm={onDelete}>
+          <Button type="text" shape="circle" size="small" danger icon={<DeleteOutlined />} aria-label={deleteLabel} />
+        </Popconfirm>
+      </Tooltip>
     </span>
   </div>;
 }
