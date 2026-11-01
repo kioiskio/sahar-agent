@@ -1,5 +1,11 @@
 export default {
   account: {
+    agentWorkspace: "经纪人工作台",
+    buyerChat: "买家聊天",
+    manageWorkspace: "管理工作台",
+    backToOrders: "返回订单列表",
+    backToChat: "返回聊天",
+    backToAgentWorkspace: "返回经纪人工作台",
     noteRequired: '请填写本次增加积分的原因。',
     amountRequired: '请输入 1 到 500 的整数。',
     notePlaceholder: '例如：延长试用额度',

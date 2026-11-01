@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Button, Input, Modal, Popconfirm, Spin } from 'antd';
-import { ArrowLeftOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { Alert, Button, Dropdown, Grid, Input, Modal, Popconfirm, Spin } from 'antd';
+import { ArrowLeftOutlined, DeleteOutlined, EditOutlined, MenuOutlined } from '@ant-design/icons';
 import type { TextAreaRef } from 'antd/es/input/TextArea';
 import { useTranslation } from 'react-i18next';
 import { ApiError, api, type Credits, type SessionUser, type WebConversationSummary, type WebMessage, type WebSnapshot } from '../api';
 import BrandMark from '../components/BrandMark';
 import type { Navigate } from '../App';
+import { checkoutFrom, loginPath } from '../navigation';
 
 const CONTACT = 'mailto:kioiskio01@gmail.com?subject=Sahar%20trial%20credits';
 
@@ -30,6 +31,7 @@ function when(value: string, locale: string): string {
 
 export default function Workspace({ path, navigate }: { path: string; navigate: Navigate }) {
   const { t, i18n } = useTranslation();
+  const screens = Grid.useBreakpoint();
   const conversationId = path.startsWith('/workspace/') ? decodeURIComponent(path.split('/')[2] ?? '') : '';
   const [user, setUser] = useState<SessionUser | null>(null);
   const [credits, setCredits] = useState<Credits | null>(null);
@@ -69,13 +71,13 @@ export default function Workspace({ path, navigate }: { path: string; navigate: 
   useEffect(() => {
     let cancelled = false;
     void api.session().then(async session => {
-      if (!session.user) { navigate('/login'); return; }
       if (cancelled) return;
+      if (!session.user) { navigate(loginPath(window.location.pathname)); return; }
       setUser(session.user);
       setCredits(session.credits ?? null);
       const data = await api.myConversations();
       if (!cancelled) setConversations(data.conversations);
-    }).catch(() => navigate('/login'));
+    }).catch(() => { if (!cancelled) navigate(loginPath(window.location.pathname)); });
     return () => { cancelled = true; };
   }, [navigate]);
 
@@ -196,7 +198,12 @@ export default function Workspace({ path, navigate }: { path: string; navigate: 
       <a className="brand" href="/" onClick={event => { event.preventDefault(); navigate('/'); }}><BrandMark className="brand-mark" /><span>sahar<span className="brand-dot">.</span></span></a>
       {user && <span className="workspace-email">{user.email}</span>}
       <span className="workspace-credits">{t('account.creditsLeft', { count: balance })}</span>
-      {user?.admin && <Button type="text" onClick={() => navigate('/admin')}>{t('account.admin')}</Button>}
+      {user?.admin && (screens.md ? <>
+        <Button type="text" onClick={() => navigate('/console/overview')}>{t('account.agentWorkspace')}</Button>
+        <Button type="text" onClick={() => navigate('/admin')}>{t('account.admin')}</Button>
+      </> : <Dropdown menu={{ items: [{ key: '/console/overview', label: t('account.agentWorkspace') }, { key: '/admin', label: t('account.admin') }], onClick: ({ key }) => navigate(key) }} trigger={['click']}>
+        <Button type="text" icon={<MenuOutlined />} aria-label={t('account.manageWorkspace')} />
+      </Dropdown>)}
       <Button type="text" onClick={() => void api.logout().finally(() => navigate('/'))}>{t('account.logout')}</Button>
     </header>
     <div className={conversationId ? 'workspace-body has-chat' : 'workspace-body'}>
@@ -228,7 +235,7 @@ export default function Workspace({ path, navigate }: { path: string; navigate: 
           </div>
           {balance < 1 && <Alert className="workspace-alert" type="warning" showIcon message={t('account.exhausted')} action={<Button href={CONTACT}>{t('account.contact')}</Button>} />}
           <div className="workspace-thread" ref={threadRef} role="log" aria-label={t('ui.conversationMessages')}>
-            {snapshot.messages.map(message => <MessageBubble key={message.id} message={message} />)}
+            {snapshot.messages.map(message => <MessageBubble key={message.id} message={message} conversationId={conversationId} />)}
             {replyingTo === conversationId && <div className="account-bubble workspace-replying" role="status" aria-live="polite"><Spin size="small" /><span>{t('account.replying')}</span></div>}
           </div>
           <div className="workspace-compose">
@@ -266,7 +273,7 @@ function ConversationRow({ item, selected, locale, untitled, renameLabel, delete
   </div>;
 }
 
-function MessageBubble({ message }: { message: WebMessage }) {
+function MessageBubble({ message, conversationId }: { message: WebMessage; conversationId: string }) {
   const { t } = useTranslation();
   const mine = message.direction === 'inbound';
   if (!mine && message.sender_type === 'system' && message.message_type === 'checkout_link') {
@@ -275,7 +282,7 @@ function MessageBubble({ message }: { message: WebMessage }) {
       try {
         const url = new URL(candidate, window.location.origin);
         if (url.origin === window.location.origin && url.pathname.startsWith('/checkout/') && !url.username && !url.password) {
-          return <div className="account-bubble"><p>{message.body.replace(candidate, '').trim()}</p><Button type="primary" href={url.pathname + url.search}>{t('ui.checkout')}</Button></div>;
+          return <div className="account-bubble"><p>{message.body.replace(candidate, '').trim()}</p><Button type="primary" href={checkoutFrom(url.href, '/workspace/' + conversationId)}>{t('ui.checkout')}</Button></div>;
         }
       } catch { /* Invalid checkout URLs remain plain text. */ }
     }

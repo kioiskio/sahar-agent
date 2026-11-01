@@ -1,5 +1,11 @@
 export default {
   account: {
+    agentWorkspace: "Agent workspace",
+    buyerChat: "Buyer chat",
+    manageWorkspace: "Manage workspace",
+    backToOrders: "Back to orders",
+    backToChat: "Back to chat",
+    backToAgentWorkspace: "Back to agent workspace",
     noteRequired: 'Enter a reason for this credit grant.',
     amountRequired: 'Enter a whole number from 1 to 500.',
     notePlaceholder: 'For example: additional trial access',

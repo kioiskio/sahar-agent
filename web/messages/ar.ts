@@ -1,5 +1,11 @@
 export default {
   account: {
+    agentWorkspace: "مساحة عمل الوكيل",
+    buyerChat: "محادثة المشتري",
+    manageWorkspace: "إدارة مساحة العمل",
+    backToOrders: "العودة إلى الطلبات",
+    backToChat: "العودة إلى المحادثة",
+    backToAgentWorkspace: "العودة إلى مساحة عمل الوكيل",
     noteRequired: 'يرجى كتابة سبب إضافة الرصيد.',
     amountRequired: 'أدخل عددًا صحيحًا من 1 إلى 500.',
     notePlaceholder: 'مثال: تمديد الفترة التجريبية',

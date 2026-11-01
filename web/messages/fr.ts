@@ -1,5 +1,11 @@
 export default {
   account: {
+    agentWorkspace: "Espace agent",
+    buyerChat: "Discussion acheteur",
+    manageWorkspace: "Gérer l’espace de travail",
+    backToOrders: "Retour aux commandes",
+    backToChat: "Retour à la discussion",
+    backToAgentWorkspace: "Retour à l’espace agent",
     noteRequired: 'Indiquez le motif de cet ajout.',
     amountRequired: 'Saisissez un entier de 1 à 500.',
     notePlaceholder: 'Exemple : prolongation de la période de test',

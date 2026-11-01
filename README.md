@@ -29,6 +29,10 @@ Built for the PayPal AI Hackathon. The hosted application uses a real language m
 
 The Telegram bot supports the same enquiry and Sandbox payment workflow. Web credits and Telegram identities are separate; entering an email in chat does not link accounts. Request additional trial credits at [kioiskio01@gmail.com](mailto:kioiskio01@gmail.com).
 
+## Workspace navigation
+
+Sign-in opens buyer chat. Verified operators can select **Agent workspace** in the chat header (or the menu on mobile) to review orders and conversations. **Administration** manages accounts and credits. Checkout opened from an operator order returns to the order list; checkout opened from chat returns to that conversation. The return destination is retained across the PayPal round trip in the same browser tab.
+
 ## Architecture
 
 ```mermaid

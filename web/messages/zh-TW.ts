@@ -1,5 +1,11 @@
 export default {
   account: {
+    agentWorkspace: "經紀人工作台",
+    buyerChat: "買家聊天",
+    manageWorkspace: "管理工作台",
+    backToOrders: "返回訂單列表",
+    backToChat: "返回聊天",
+    backToAgentWorkspace: "返回經紀人工作台",
     noteRequired: '請填寫本次增加積分的原因。',
     amountRequired: '請輸入 1 到 500 的整數。',
     notePlaceholder: '例如：延長試用額度',

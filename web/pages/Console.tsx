@@ -9,6 +9,7 @@ import ListingCover from '../components/ListingCover';
 import BrandMark from '../components/BrandMark';
 import BuyerAvatar from '../components/BuyerAvatar';
 import type { Navigate } from '../App';
+import { checkoutFrom, checkoutReturn, loginPath, rememberCheckoutReturn } from '../navigation';
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -66,7 +67,7 @@ function Status({ status }: { status: string }) {
 
 export function ConsoleHeader({ title, onMenu, extra }: { title: string; onMenu: () => void; extra?: ReactNode }) {
   const { t } = useTranslation();
-  return <div className="workspace-header"><div className="workspace-title"><Button className="mobile-menu" type="text" icon={<MenuOutlined />} onClick={onMenu} aria-label={t('ui.menu')} /><div><Text className="eyebrow-text">SAHAR / {t('console.workspace')}</Text><Title level={2}>{title}</Title></div></div><Space size="middle">{extra}</Space></div>;
+  return <div className="workspace-header"><div className="workspace-title"><Button className="mobile-menu" type="text" icon={<MenuOutlined />} onClick={onMenu} aria-label={t('ui.menu')} /><div><Text className="eyebrow-text">SAHAR / {t('account.agentWorkspace')}</Text><Title level={2}>{title}</Title></div></div><Space size="middle">{extra}</Space></div>;
 }
 
 function Overview({ data, navigate, refresh }: { data: Bootstrap; navigate: Navigate; refresh: () => Promise<void> }) {
@@ -79,7 +80,7 @@ function Overview({ data, navigate, refresh }: { data: Bootstrap; navigate: Navi
   ];
   return <>
     <Alert type="info" showIcon message={data.settings.connections.telegram ? t('telegram.adminNotice') : data.settings.paypal_mode === 'sandbox' ? t('demoWorkspace.adminNotice') : t('legal.note')} className="demo-alert" />
-    <Row gutter={[20, 20]}>{cards.map(card => <Col xs={12} sm={12} xl={6} key={card.title}><Card className="metric-card"><div className={'metric-icon ' + card.tone}>{card.icon}</div><Statistic title={card.title} value={card.value} /><Text type="secondary">{card.suffix ?? (data.settings.paypal_mode === 'sandbox' ? t('ui.sandbox') : t('console.workspace'))}</Text></Card></Col>)}</Row>
+    <Row gutter={[20, 20]}>{cards.map(card => <Col xs={12} sm={12} xl={6} key={card.title}><Card className="metric-card"><div className={'metric-icon ' + card.tone}>{card.icon}</div><Statistic title={card.title} value={card.value} /><Text type="secondary">{card.suffix ?? (data.settings.paypal_mode === 'sandbox' ? t('ui.sandbox') : t('account.agentWorkspace'))}</Text></Card></Col>)}</Row>
     <Row gutter={[20, 20]} className="section-row"><Col xs={24} xl={15}><Card title={t('flows.buyerTitle')} extra={<Tag color="green">{t('console.active')}</Tag>} className="dashboard-card"><div className="funnel">{[
       [t('metrics.conversations'), data.stats.conversations, 90],
       [t('metrics.highIntent'), data.stats.highIntent, 65],
@@ -263,7 +264,7 @@ function OrderDrawer({ order, onClose }: { order: Order | null; onClose: () => v
     { key: 'paid', label: t('ui.paidAt'), children: order.paid_at ? new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(order.paid_at)) : '—' },
     { key: 'accepted', label: t('ui.termsAccepted'), children: order.terms_accepted_at ? new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(order.terms_accepted_at)) : t('ui.notAccepted') }
   ] : [];
-  return <Drawer title={t('hero.orderLabel')} open={Boolean(order)} onClose={onClose} size={440}><Descriptions column={1} bordered size="small" items={items} />{checkoutUrl && <Button className="payment-approval-link" type="primary" icon={<CreditCardOutlined />} href={checkoutUrl}>{t('ui.checkout')}</Button>}</Drawer>;
+  return <Drawer className="order-details-drawer" title={t('hero.orderLabel')} open={Boolean(order)} onClose={onClose} size={440}><Descriptions column={1} bordered size="small" items={items} />{checkoutUrl && <div className="order-checkout-actions"><Button className="payment-approval-link" type="primary" icon={<CreditCardOutlined />} href={checkoutFrom(checkoutUrl, '/console/orders')}>{t('ui.checkout')}</Button></div>}</Drawer>;
 }
 
 function SandboxOrderModal({ open, listings, onClose, refresh }: { open: boolean; listings: Listing[]; onClose: () => void; refresh: () => Promise<void> }) {
@@ -314,7 +315,7 @@ function SandboxOrderModal({ open, listings, onClose, refresh }: { open: boolean
       <Select aria-label={t('ui.selectListing')} placeholder={t('ui.selectListing')} style={{ width: '100%' }} value={listingId || undefined} onChange={selectListing} options={activeListings.map(item => ({ value: item.id, label: item.title }))} disabled={loading} />
       {listing && <Statistic title={t('ui.sandboxServerAmount')} value={money(listing.deposit_cents, listing.deposit_currency, i18n.language)} />}
       <Button type="primary" icon={<CreditCardOutlined />} loading={loading} disabled={!listing} onClick={() => void create()}>{t(checkoutUrl ? 'ui.sandboxCreateAnother' : 'ui.sandboxCreateOrder')}</Button>
-      {checkoutUrl && <Alert type="success" showIcon message={t('ui.sandboxOrderCreated')} description={<Button type="link" href={checkoutUrl} icon={<CreditCardOutlined />}>{t('ui.sandboxOpenCheckout')}</Button>} />}
+      {checkoutUrl && <Alert type="success" showIcon message={t('ui.sandboxOrderCreated')} description={<Button type="link" href={checkoutFrom(checkoutUrl, '/console/orders')} icon={<CreditCardOutlined />}>{t('ui.sandboxOpenCheckout')}</Button>} />}
     </Space>
   </Modal>;
 }
@@ -404,6 +405,22 @@ function Checkout({ orderId, navigate }: { orderId: string; navigate: Navigate }
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [returnTo, setReturnTo] = useState('/workspace');
+  const search = window.location.search;
+  useEffect(() => {
+    let active = true;
+    const preferred = checkoutReturn(orderId, search);
+    if (preferred) {
+      rememberCheckoutReturn(orderId, preferred);
+      setReturnTo(preferred);
+    } else {
+      setReturnTo('/workspace');
+      void api.session().then(session => {
+        if (active) setReturnTo(session.user?.admin ? '/console/orders' : '/workspace');
+      }).catch(() => undefined);
+    }
+    return () => { active = false; };
+  }, [orderId, search]);
   const params = new URLSearchParams(window.location.search);
   const accessToken = params.get('access_token') ?? params.get('token') ?? '';
   const paymentReturn = params.get('payment_return') === '1';
@@ -469,7 +486,7 @@ function Checkout({ orderId, navigate }: { orderId: string; navigate: Navigate }
         ? <Button type="primary" size="large" block loading={loading} disabled={!agreed || paid} icon={<CheckOutlined />} onClick={() => void complete()}>{paid ? t('ui.statusPaid') : t('ui.demoPay')}</Button>
         : <Button type="primary" size="large" block loading={loading} disabled={!agreed || paid || processing || order.status !== 'pending_payment' || !accessToken} icon={<CheckOutlined />} onClick={() => void complete()}>{paid ? t('ui.statusPaid') : processing ? t('ui.statusProcessing') : t(needsApproval ? 'ui.continueToPaypal' : 'ui.capturePayment')}</Button>}
       {isDemo && <Text type="secondary">{t('console.noRealMoney')}</Text>}
-      {(isDemo || paid) && <Button block icon={<ArrowLeftOutlined />} onClick={() => navigate(isDemo ? '/demo/' + order.conversation_id : '/workspace')}>{t(isDemo ? 'ui.back' : 'account.workspace')}</Button>}
+      {(isDemo || paid) && <Button block icon={<ArrowLeftOutlined />} onClick={() => navigate(isDemo ? '/demo/' + order.conversation_id : returnTo)}>{t(isDemo ? 'ui.back' : returnTo === '/console/orders' ? 'account.backToOrders' : returnTo.startsWith('/console/') ? 'account.backToAgentWorkspace' : returnTo === '/admin' ? 'account.admin' : 'account.backToChat')}</Button>}
       {error && <Alert type="error" message={error} />}
     </Space>
   </Card></div>;
@@ -490,28 +507,30 @@ export default function Console({ path, navigate }: { path: string; navigate: Na
       if (cause instanceof ApiError && cause.status === 401) {
         setAllowed(false);
         setData(null);
-        navigate('/login');
+        navigate(loginPath(path));
       }
       setError(cause instanceof Error ? cause.message : t('ui.error'));
       throw cause;
     }
-  }, [navigate, t]);
+  }, [navigate, path, t]);
   useEffect(() => {
     if (isPublicFlow) return;
+    let active = true;
     void api.session().then(session => {
-      if (!session.user) { navigate('/login'); return; }
+      if (!active) return;
+      if (!session.user) { navigate(loginPath(path)); return; }
       if (!session.user.admin) { setAllowed(false); setError(t('account.notAdmin')); return; }
       setAllowed(true);
       void refresh().catch(() => undefined);
-    }).catch(() => navigate('/login'));
+    }).catch(() => { if (active) navigate(loginPath(path)); });
     const resize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
     window.addEventListener('resize', resize);
-    return () => window.removeEventListener('resize', resize);
+    return () => { active = false; window.removeEventListener('resize', resize); };
   }, [refresh, isPublicFlow, navigate, t]);
   const logout = () => { void api.logout().finally(() => navigate('/')); };
   if (path.startsWith('/demo')) return <Demo id={path.split('/')[2]} navigate={navigate} />;
   if (path.startsWith('/checkout/')) return <Checkout orderId={path.split('/')[2]} navigate={navigate} />;
-  if (!allowed) return <div className="page-loading">{error ? <Card style={{ width: 420, maxWidth: '100%' }}><Alert type="warning" showIcon message={error} /><Button type="primary" style={{ marginTop: 16 }} onClick={() => navigate('/workspace')}>{t('account.workspace')}</Button></Card> : <Spin size="large" />}</div>;
+  if (!allowed) return <div className="page-loading">{error ? <Card style={{ width: 420, maxWidth: '100%' }}><Alert type="warning" showIcon message={error} /><Button type="primary" style={{ marginTop: 16 }} onClick={() => navigate('/workspace')}>{t('account.buyerChat')}</Button></Card> : <Spin size="large" />}</div>;
   if (!data) return <div className="page-loading">{error ? <Alert type="error" message={error} action={<Button onClick={() => void refresh().catch(() => undefined)}>{t('ui.refresh')}</Button>} /> : <Spin size="large" />}</div>;
   const active = ['overview', 'conversations', 'listings', 'orders', 'settings'].includes(path.split('/')[2]) ? path.split('/')[2] : 'overview';
   const menuItems: MenuProps['items'] = [
@@ -521,6 +540,6 @@ export default function Console({ path, navigate }: { path: string; navigate: Na
     { key: 'orders', icon: <CreditCardOutlined />, label: t('pages.orders') },
     { key: 'settings', icon: <SettingOutlined />, label: t('pages.settings') }
   ];
-  const sidebar = <div className="sidebar-content"><a className="console-logo" dir="ltr" href="/" onClick={event => { event.preventDefault(); navigate('/'); }}><BrandMark className="console-brand-mark" />sahar.</a><Card className="workspace-card"><Space><Avatar icon={<BankOutlined />} /><div><Text strong>{t('console.workspace')}</Text><br /><Text type="secondary">{data.settings.paypal_mode === 'sandbox' ? t('ui.sandbox') : data.settings.channel_mode === 'mock' ? t('console.demoMode') : t('console.workspace')}</Text></div></Space></Card><Menu theme="dark" mode="inline" selectedKeys={[active]} items={menuItems} onClick={({ key }) => { navigate('/console/' + key); setMenuOpen(false); }} /><div className="sidebar-bottom"><Button type="primary" block onClick={() => navigate('/admin')}>{t('account.admin')}</Button><Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/workspace')}>{t('account.workspace')}</Button></div></div>;
-  return <Layout className="workspace-shell"><Sider width={248} breakpoint="lg" collapsedWidth={0} trigger={null}>{sidebar}</Sider><Drawer placement="left" open={isMobile && menuOpen} onClose={() => setMenuOpen(false)} width={280} className="workspace-drawer">{sidebar}</Drawer><Layout><Header className="console-header"><Button className="console-menu" type="text" icon={<MenuOutlined />} onClick={() => setMenuOpen(true)} aria-label={t('ui.menu')} /><Text strong>{t('console.workspace')}</Text></Header><Content className="workspace-content"><div className="workspace-heading"><div><Text className="eyebrow-text">SAHAR / {t('console.workspace')}</Text><Title level={2}>{t('pages.' + active)}</Title></div><Space wrap className="workspace-actions"><Button type="primary" onClick={() => navigate('/workspace')}>{t('account.workspace')}</Button><Button icon={<LockOutlined />} onClick={logout}>{t('account.logout')}</Button></Space></div>{active === 'overview' && <Overview data={data} navigate={navigate} refresh={refresh} />}{active === 'conversations' && <Conversations data={data} refresh={refresh} />}{active === 'listings' && <Listings listings={data.listings} refresh={refresh} />}{active === 'orders' && <Orders data={data} refresh={refresh} />}{active === 'settings' && <WorkspaceSettings data={data} refresh={refresh} />}</Content></Layout></Layout>;
+  const sidebar = <div className="sidebar-content"><a className="console-logo" dir="ltr" href="/" onClick={event => { event.preventDefault(); navigate('/'); }}><BrandMark className="console-brand-mark" />sahar.</a><Card className="workspace-card"><Space><Avatar icon={<BankOutlined />} /><div><Text strong>{t('account.agentWorkspace')}</Text><br /><Text type="secondary">{data.settings.paypal_mode === 'sandbox' ? t('ui.sandbox') : data.settings.channel_mode === 'mock' ? t('console.demoMode') : t('account.agentWorkspace')}</Text></div></Space></Card><Menu theme="dark" mode="inline" selectedKeys={[active]} items={menuItems} onClick={({ key }) => { navigate('/console/' + key); setMenuOpen(false); }} /><div className="sidebar-bottom"><Button type="primary" block onClick={() => navigate('/admin')}>{t('account.admin')}</Button><Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/workspace')}>{t('account.buyerChat')}</Button></div></div>;
+  return <Layout className="workspace-shell"><Sider width={248} breakpoint="lg" collapsedWidth={0} trigger={null}>{sidebar}</Sider><Drawer placement="left" open={isMobile && menuOpen} onClose={() => setMenuOpen(false)} width={280} className="workspace-drawer">{sidebar}</Drawer><Layout><Header className="console-header"><Button className="console-menu" type="text" icon={<MenuOutlined />} onClick={() => setMenuOpen(true)} aria-label={t('ui.menu')} /><Text strong>{t('account.agentWorkspace')}</Text></Header><Content className="workspace-content"><div className="workspace-heading"><div><Text className="eyebrow-text">SAHAR / {t('account.agentWorkspace')}</Text><Title level={2}>{t('pages.' + active)}</Title></div><Space wrap className="workspace-actions"><Button type="primary" onClick={() => navigate('/workspace')}>{t('account.buyerChat')}</Button><Button onClick={() => navigate('/admin')}>{t('account.admin')}</Button><Button icon={<LockOutlined />} onClick={logout}>{t('account.logout')}</Button></Space></div>{active === 'overview' && <Overview data={data} navigate={navigate} refresh={refresh} />}{active === 'conversations' && <Conversations data={data} refresh={refresh} />}{active === 'listings' && <Listings listings={data.listings} refresh={refresh} />}{active === 'orders' && <Orders data={data} refresh={refresh} />}{active === 'settings' && <WorkspaceSettings data={data} refresh={refresh} />}</Content></Layout></Layout>;
 }

@@ -57,7 +57,7 @@ export default function App() {
 
   const navigate: Navigate = useCallback(next => {
     window.history.pushState({}, '', next);
-    setPath(next);
+    setPath(window.location.pathname);
     setMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);

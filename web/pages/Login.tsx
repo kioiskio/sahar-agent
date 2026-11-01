@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ApiError, api } from '../api';
 import BrandMark from '../components/BrandMark';
 import type { Navigate } from '../App';
+import { afterSignIn } from '../navigation';
 
 const { Paragraph, Title } = Typography;
 const TURNSTILE_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
@@ -62,8 +63,10 @@ export default function Login({ navigate }: { navigate: Navigate }) {
   };
 
   useEffect(() => {
+    let active = true;
+    const returnSearch = window.location.search;
     mounted.current = true;
-    void api.session().then(session => { if (session.user) navigate('/workspace'); }).catch(() => undefined);
+    void api.session().then(session => { if (active && session.user) navigate(afterSignIn(returnSearch, session.user.admin)); }).catch(() => undefined);
     void api.authConfig().then(config => {
       if (mounted.current) setSiteKey(config.turnstileSiteKey);
     }).catch(() => {
@@ -71,7 +74,7 @@ export default function Login({ navigate }: { navigate: Navigate }) {
     }).finally(() => {
       if (mounted.current) setConfigLoaded(true);
     });
-    return () => { mounted.current = false; };
+    return () => { active = false; mounted.current = false; };
   }, [navigate]);
 
   useEffect(() => {
@@ -154,8 +157,8 @@ export default function Login({ navigate }: { navigate: Navigate }) {
         setSent(true);
         return;
       }
-      await api.verifyCode(email.trim(), code.trim());
-      navigate('/workspace');
+      const session = await api.verifyCode(email.trim(), code.trim());
+      if (mounted.current) navigate(afterSignIn(window.location.search, session.user.admin));
     } catch (cause) {
       if (mounted.current) setError(messageFor(t, cause));
       if (!sent && siteKey && turnstileReady) resetTurnstile();

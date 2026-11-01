@@ -3,6 +3,7 @@ import { Alert, Button, Card, Drawer, Form, Grid, Input, InputNumber, Modal, Spa
 import { useTranslation } from 'react-i18next';
 import { ApiError, api, type AdminLedgerEntry, type AdminUser, type AdminUserEvent } from '../api';
 import BrandMark from '../components/BrandMark';
+import { loginPath } from '../navigation';
 import type { Navigate } from '../App';
 
 const { Paragraph, Text, Title } = Typography;
@@ -44,10 +45,10 @@ export default function Admin({ navigate }: { navigate: Navigate }) {
 
   useEffect(() => {
     void api.session().then(async session => {
-      if (!session.user) { navigate('/login'); return; }
+      if (!session.user) { navigate(loginPath('/admin')); return; }
       if (!session.user.admin) { setError(t('account.notAdmin')); return; }
       await load();
-    }).catch(() => navigate('/login')).finally(() => setLoading(false));
+    }).catch(() => navigate(loginPath('/admin'))).finally(() => setLoading(false));
   }, [navigate, t]);
 
   const loadUserDetail = async (userId: string) => {
@@ -126,8 +127,9 @@ export default function Admin({ navigate }: { navigate: Navigate }) {
   return <div className="account-shell admin-shell">
     <header className="account-top admin-top">
       <a className="brand" href="/" onClick={event => { event.preventDefault(); navigate('/'); }}><BrandMark className="brand-mark" /><span>sahar<span className="brand-dot">.</span></span></a>
-      <Space>
-        <Button onClick={() => navigate('/workspace')}>{t('account.workspace')}</Button>
+      <Space wrap>
+        <Button onClick={() => navigate('/workspace')}>{t('account.buyerChat')}</Button>
+        <Button onClick={() => navigate('/console/overview')}>{t('account.agentWorkspace')}</Button>
         <Button onClick={() => navigate('/console/orders')}>{t('pages.orders')}</Button>
       </Space>
     </header>

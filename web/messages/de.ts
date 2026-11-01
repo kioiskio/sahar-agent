@@ -1,5 +1,11 @@
 export default {
   account: {
+    agentWorkspace: "Makler-Arbeitsbereich",
+    buyerChat: "Käuferchat",
+    manageWorkspace: "Arbeitsbereich verwalten",
+    backToOrders: "Zurück zu Bestellungen",
+    backToChat: "Zurück zum Chat",
+    backToAgentWorkspace: "Zurück zum Maklerbereich",
     noteRequired: 'Bitte einen Grund für die Gutschrift angeben.',
     amountRequired: 'Eine ganze Zahl von 1 bis 500 eingeben.',
     notePlaceholder: 'Beispiel: zusätzliche Testnutzung',
