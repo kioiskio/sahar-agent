@@ -47,7 +47,7 @@
 .workspace-thread-head h2 { margin: 0; font-size: 16px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .workspace-thread { flex: 1; min-height: 0; overflow: auto; padding: 8px 8vw 8px; display: flex; flex-direction: column; gap: 12px; }
 .workspace-compose { flex: none; padding: 8px 8vw 18px; }
-.workspace-compose-box { background: #fff; border: 1px solid #e5dfd3; border-radius: 16px; padding: 8px; display: flex; gap: 8px; align-items: flex-end; box-shadow: 0 8px 24px rgba(28, 45, 39, .04); }
+.workspace-compose-box { background: #fff; border: 1px solid #e5dfd3; border-radius: 16px; padding: 8px; display: flex; gap: 8px; align-items: center; box-shadow: 0 8px 24px rgba(28, 45, 39, .04); }
 .workspace-compose-box textarea { border: 0 !important; box-shadow: none !important; resize: none; padding: 8px; }
 .workspace-hint { margin: 8px 4px 0; color: #7b877f; font-size: 12px; }
 .workspace-empty { flex: 1; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 32px 10vw; gap: 8px; }
@@ -67,3 +67,15 @@
   .account-card { margin-top: 24px; }
 }
 .workspace-replying { display: inline-flex; align-items: center; gap: 12px; align-self: flex-start; color: #65756e; font-size: 14px; padding: 14px 18px; }
+
+.workspace-compose-box > .ant-btn { flex: none; align-self: center; }
+.workspace-compose-box textarea { min-width: 0; scrollbar-width: thin; scrollbar-color: #b4c5b9 transparent; }
+@supports selector(::-webkit-scrollbar) {
+  .workspace-compose-box textarea { scrollbar-width: auto; scrollbar-color: auto; }
+  .workspace-compose-box textarea::-webkit-scrollbar { width: 6px; }
+  .workspace-compose-box textarea::-webkit-scrollbar-track { background: transparent; margin-block: 8px; }
+  .workspace-compose-box textarea::-webkit-scrollbar-thumb { background: #b4c5b9; border-radius: 999px; }
+  .workspace-compose-box textarea::-webkit-scrollbar-thumb:hover { background: #93ad9c; }
+  .workspace-compose-box textarea::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+  .workspace-compose-box textarea::-webkit-scrollbar-corner { background: transparent; }
+}

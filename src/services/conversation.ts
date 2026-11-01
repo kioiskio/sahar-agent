@@ -49,12 +49,36 @@ const consentCopy: Record<Locale, string> = {
 };
 
 const checkoutReadyCopy: Record<Locale, (listing: Listing) => string> = {
-  en: listing => `The ${listing.deposit_currency} ${(listing.deposit_cents / 100).toFixed(2)} intent-deposit checkout for ${listing.title} is ready. Open the checkout below to review the terms and approve using PayPal Sandbox test funds. Creating a checkout does not itself charge funds or reserve a real property.`,
-  'zh-CN': listing => `${listing.title} 的 ${listing.deposit_currency} ${(listing.deposit_cents / 100).toFixed(2)} 意向金结账已准备好。请打开下方结账页面，阅读条款，并使用 PayPal Sandbox 测试资金批准付款。创建结账本身不会扣款，也不代表真实房源已预订。`,
-  'zh-TW': listing => `${listing.title} 的 ${listing.deposit_currency} ${(listing.deposit_cents / 100).toFixed(2)} 意向金結帳已準備好。請開啟下方結帳頁面，閱讀條款，並使用 PayPal Sandbox 測試資金核准付款。建立結帳本身不會扣款，也不代表真實房源已預訂。`,
-  fr: listing => `Le paiement de l’acompte de ${listing.deposit_currency} ${(listing.deposit_cents / 100).toFixed(2)} pour ${listing.title} est prêt. Ouvrez le lien ci-dessous pour lire les conditions et approuver avec des fonds de test PayPal Sandbox. Créer ce paiement ne débite aucun fonds et ne réserve aucun bien réel.`,
-  de: listing => `Der Checkout für die Anzahlung von ${listing.deposit_currency} ${(listing.deposit_cents / 100).toFixed(2)} für ${listing.title} ist bereit. Öffnen Sie ihn unten, prüfen Sie die Bedingungen und bestätigen Sie mit PayPal-Sandbox-Testgeld. Das Erstellen des Checkouts belastet kein Guthaben und reserviert keine reale Immobilie.`,
-  ar: listing => `صفحة دفع عربون ${listing.title} بقيمة ${listing.deposit_currency} ${(listing.deposit_cents / 100).toFixed(2)} جاهزة. افتح صفحة الدفع أدناه لمراجعة الشروط والموافقة باستخدام أموال اختبار PayPal Sandbox. إنشاء صفحة الدفع وحده لا يخصم أموالاً ولا يحجز عقاراً حقيقياً.`
+  en: listing => `The ${listing.deposit_currency} ${(listing.deposit_cents / 100).toFixed(2)} intent-deposit checkout for ${listing.title} is ready.
+
+Open the checkout below to review the terms and approve using PayPal Sandbox test funds.
+
+Creating a checkout does not itself charge funds or reserve a real property.`,
+  'zh-CN': listing => `${listing.title} 的 ${listing.deposit_currency} ${(listing.deposit_cents / 100).toFixed(2)} 意向金结账已准备好。
+
+请打开下方结账页面，阅读条款，并使用 PayPal Sandbox 测试资金批准付款。
+
+创建结账本身不会扣款，也不代表真实房源已预订。`,
+  'zh-TW': listing => `${listing.title} 的 ${listing.deposit_currency} ${(listing.deposit_cents / 100).toFixed(2)} 意向金結帳已準備好。
+
+請開啟下方結帳頁面，閱讀條款，並使用 PayPal Sandbox 測試資金核准付款。
+
+建立結帳本身不會扣款，也不代表真實房源已預訂。`,
+  fr: listing => `Le paiement de l’acompte de ${listing.deposit_currency} ${(listing.deposit_cents / 100).toFixed(2)} pour ${listing.title} est prêt.
+
+Ouvrez le lien ci-dessous pour lire les conditions et approuver avec des fonds de test PayPal Sandbox.
+
+Créer ce paiement ne débite aucun fonds et ne réserve aucun bien réel.`,
+  de: listing => `Der Checkout für die Anzahlung von ${listing.deposit_currency} ${(listing.deposit_cents / 100).toFixed(2)} für ${listing.title} ist bereit.
+
+Öffnen Sie ihn unten, prüfen Sie die Bedingungen und bestätigen Sie mit PayPal-Sandbox-Testgeld.
+
+Das Erstellen des Checkouts belastet kein Guthaben und reserviert keine reale Immobilie.`,
+  ar: listing => `صفحة دفع عربون ${listing.title} بقيمة ${listing.deposit_currency} ${(listing.deposit_cents / 100).toFixed(2)} جاهزة.
+
+افتح صفحة الدفع أدناه لمراجعة الشروط والموافقة باستخدام أموال اختبار PayPal Sandbox.
+
+إنشاء صفحة الدفع وحده لا يخصم أموالاً ولا يحجز عقاراً حقيقياً.`
 };
 
 function findListing(text: string, listings: Listing[], selected: Listing | null): Listing | null {
