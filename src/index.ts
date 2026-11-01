@@ -6,6 +6,7 @@ import whatsapp from './routes/whatsapp';
 import paypal from './routes/paypal';
 import telegram from './routes/telegram';
 import api from './routes/api';
+import checkout from './routes/checkout';
 import { runMaintenance } from './services/maintenance';
 import { publicError } from './lib/security';
 import type { SecretBinding } from './lib/ai';
@@ -61,7 +62,9 @@ app.use(secureHeaders({
   contentSecurityPolicy: { defaultSrc: ["'self'"], scriptSrc: ["'self'", 'https://challenges.cloudflare.com'], styleSrc: ["'self'", "'unsafe-inline'"], imgSrc: ["'self'", 'data:', 'https://challenges.cloudflare.com'], connectSrc: ["'self'", 'data:', 'https://challenges.cloudflare.com', 'https://hagen.challenges.cloudflare.com', 'https://brunhild.challenges.cloudflare.com'], fontSrc: ["'self'", 'data:'], frameSrc: ['https://challenges.cloudflare.com', 'https://hagen.challenges.cloudflare.com', 'https://brunhild.challenges.cloudflare.com'], frameAncestors: ["'none'"], baseUri: ["'self'"], formAction: ["'self'", 'https://www.paypal.com', 'https://www.sandbox.paypal.com'] },
   xFrameOptions: false,
   crossOriginResourcePolicy: false,
-  crossOriginOpenerPolicy: false
+  crossOriginOpenerPolicy: false,
+  // Native same-origin forms need an Origin header; external navigation receives no referrer.
+  referrerPolicy: 'same-origin'
 }));
 app.use('*', async (c, next) => {
   await next();
@@ -74,6 +77,7 @@ app.use('*', async (c, next) => {
   }
 });
 app.route('/api', api);
+app.route('/checkout', checkout);
 app.route('/webhook/whatsapp', whatsapp);
 app.route('/webhook/paypal', paypal);
 app.route('/webhook/telegram', telegram);

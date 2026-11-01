@@ -31,7 +31,9 @@ The Telegram bot supports the same enquiry and Sandbox payment workflow. After p
 
 ## Workspace navigation
 
-Sign-in opens buyer chat. Verified operators can select **Agent workspace** in the chat header (or the menu on mobile) to review orders and conversations. **Administration** manages accounts and credits. Checkout opened from an operator order returns to the order list; checkout opened from chat returns to that conversation. The return destination is retained across the PayPal round trip in the same browser tab.
+Sign-in opens buyer chat. Verified operators can select **Agent workspace** in the chat header (or the menu on mobile) to review orders and conversations. **Administration** manages accounts and credits. Checkout opened from an operator order returns to the order list; checkout opened from chat returns to that conversation. A short-lived, order-scoped cookie retains this destination across the PayPal round trip.
+
+Real PayPal checkout is rendered by the server with native HTML forms. Viewing an order does not require JavaScript, images, application bundles or a PayPal API request. After accepting the terms, the buyer continues to PayPal; after approval, the buyer submits the capture form. Cancellation returns display a clear notice without changing a confirmed payment. Refreshing the page never submits a payment.
 
 ## Architecture
 
@@ -113,7 +115,7 @@ src/
   db/            Schema, migrations and data access
   i18n/          Server-side workflow translations
   lib/           AI, payments, sessions, credits and rate limits
-  routes/        APIs and provider webhooks
+  routes/        APIs, server-rendered checkout and provider webhooks
   services/      Conversation, payment and delivery workflows
 web/
   components/    Shared brand, avatar and listing components
