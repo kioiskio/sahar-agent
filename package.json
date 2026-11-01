@@ -1,0 +1,50 @@
+{
+  "name": "sahar-agent",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "avatars:generate": "node scripts/generate-avatars.mjs",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^6.3.4",
+    "antd": "^6.6.8",
+    "hono": "^4.13.14",
+    "i18next": "^26.0.3",
+    "lucide-react": "^0.577.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-i18next": "^17.0.2"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.25.1",
+    "@cloudflare/workers-types": "^5.20261027.1",
+    "@dicebear/core": "^10.7.0",
+    "@dicebear/styles": "^10.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.0.0",
+    "wrangler": "^4.153.0"
+  },
+  "description": "Multilingual property enquiries, buyer qualification and consent-based PayPal Sandbox checkout through web chat and Telegram.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kioiskio/sahar-agent.git"
+  },
+  "homepage": "https://github.com/kioiskio/sahar-agent#readme",
+  "bugs": {
+    "url": "https://github.com/kioiskio/sahar-agent/issues"
+  }
+}

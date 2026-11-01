@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Privacy information for Sahar web chat, Telegram and PayPal Sandbox integrations.">
+  <title>Sahar — Privacy information</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; color: #173f35; background: #f7f8f5; line-height: 1.65; }
+    body { margin: 0; }
+    main { max-width: 760px; margin: 0 auto; padding: 48px 24px 72px; }
+    h1 { font-size: 2rem; line-height: 1.2; }
+    h2 { font-size: 1.2rem; margin-top: 2rem; }
+    p, li { max-width: 70ch; }
+    .notice { padding: 16px 20px; background: #fff4d6; border: 1px solid #d9b765; border-radius: 8px; }
+    a { color: #173f35; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Privacy information</h1>
+  <p>Updated November 1, 2026. This notice describes the hosted Sahar application, including signed-in web chat, Telegram and PayPal Sandbox checkout.</p>
+  <div class="notice">
+    <strong>Contact</strong>
+    <p>For privacy questions or access, correction and deletion requests, email <a href="mailto:kioiskio01@gmail.com">kioiskio01@gmail.com</a>.</p>
+  </div>
+  <h2>Information stored</h2>
+  <ul>
+    <li>Account email, verification status, hashed verification codes, server session records and sign-in events, including hashed network identifiers used for abuse prevention.</li>
+    <li>Conversation titles, messages, replies, language, selected listing, buyer-intent score and agent handoff state.</li>
+    <li>Telegram chat and message identifiers when you contact the bot. Telegram and web accounts are not automatically linked.</li>
+    <li>Credit balances, usage reservations, ledger entries and administrator grant notes.</li>
+    <li>Deposit amount and currency, accepted terms timestamp, PayPal order and capture references, and payment state.</li>
+    <li>Webhook processing, message delivery, retry and operational records.</li>
+  </ul>
+  <p>Checkout URLs contain access tokens. The database stores token hashes for order access, while outbound messages and delivery records may contain the full link for delivery and retry. Protect those URLs and do not share them publicly. PayPal handles payment credentials; Sahar does not ask for card details or PayPal passwords in chat.</p>
+  <h2>Purpose and access</h2>
+  <p>These records support sign-in, saved conversations, property recommendations, trial usage, payment reconciliation, agent handoff and abuse prevention. Authorized administrators can inspect operational records. Intent scores are workflow aids; they do not verify a buyer, ownership, property availability or legal entitlement.</p>
+  <h2>Service providers</h2>
+  <ul>
+    <li><strong>Cloudflare</strong> hosts the application, D1 records, verification challenge and configured email-sending service, and may process network and operational logs.</li>
+    <li><strong>Telegram</strong> processes bot messages and chat identifiers when you use that channel.</li>
+    <li><strong>Qiniu and its configured model service</strong> receive message text, relevant conversation history and catalogue information to generate replies. Do not send confidential or sensitive personal information in chat.</li>
+    <li><strong>PayPal Sandbox</strong> processes test order approvals, captures and related events. The hosted release uses test funds.</li>
+  </ul>
+  <p>External providers have their own terms, processing locations and retention practices. An independently deployed instance may use different configured providers; its operator is responsible for an accurate notice.</p>
+  <h2>Browser storage</h2>
+  <p>Sahar stores the selected language in browser storage and a language cookie. Sign-in uses a server session cookie. Legacy operator tools may retain an access key in tab-scoped session storage if one is supplied. Protect shared devices and log out when finished.</p>
+  <h2>Retention and deletion</h2>
+  <p>Scheduled maintenance removes eligible simulator conversations older than seven days and processed webhook records older than 90 days. Failed webhook records and ordinary account, Telegram, payment, credit and audit records are not all covered by this cleanup. Their retention is managed by the operator. Provider logs, exports and backups may have different lifetimes.</p>
+  <p>You can delete eligible web conversations in the workspace. Payment-related conversations have deletion safeguards. Contact the operator for broader requests; account export and account deletion are not available as self-service features.</p>
+  <h2>Product boundaries</h2>
+  <p>Catalogue properties and images are illustrative. Sandbox payments do not reserve real property, establish escrow or replace title, legal or availability checks. Use fictional information when exploring sample workflows. The software does not by itself guarantee legal or regulatory compliance.</p>
+  <p><a href="/">Return to Sahar</a></p>
+</main>
+</body>
+</html>

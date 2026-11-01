@@ -1,0 +1,32 @@
+name = "sahar-agent"
+main = "src/index.ts"
+compatibility_date = "2026-10-26"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+[triggers]
+crons = ["* * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sahar-agent"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "src/db/migrations"
+
+[vars]
+APP_BASE_URL = "http://localhost:3000"
+CHANNEL_MODE = "telegram"
+PAYPAL_MODE = "sandbox"
+AI_PROVIDER = "openai"
+AI_BASE_URL = "https://api.qnaigc.com/v1"
+AI_MODEL = "deepseek/deepseek-v4.1-flash-1017"
+AI_DAILY_CALL_BUDGET = "400"
+ADMIN_EMAILS = "admin@example.com"
+EMAIL_FROM = "noreply@example.com"
+TURNSTILE_SITE_KEY = "REPLACE_WITH_YOUR_SITE_KEY"
+
+# Provision the EMAIL binding before enabling sign-in; see docs/DEPLOYMENT.md.
+# Keep credentials in Worker secrets or Secrets Store, never in this file.
