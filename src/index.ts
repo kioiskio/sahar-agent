@@ -10,6 +10,7 @@ import { runMaintenance } from './services/maintenance';
 import { publicError } from './lib/security';
 import type { SecretBinding } from './lib/ai';
 import type { EmailBinding } from './lib/mailer';
+import { canonicalRedirect } from './lib/canonical-origin';
 
 export type Bindings = {
   DB: D1Database;
@@ -88,6 +89,7 @@ app.notFound(async c => {
   return new Response(shell.body, { status: shell.status, headers: { 'Content-Type': shell.headers.get('Content-Type') ?? 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' } });
 });
 export default {
-  fetch: app.fetch,
+  fetch: (request: Request, env: Bindings, ctx: ExecutionContext) =>
+    canonicalRedirect(request, env.APP_BASE_URL) ?? app.fetch(request, env, ctx),
   scheduled: async (_event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) => { ctx.waitUntil(runMaintenance(env)); }
 };

@@ -4,7 +4,7 @@
 
 Sahar is a multilingual property enquiry assistant for Dubai real estate teams. Buyers describe their budget, preferred area and purchase timeline in web chat or Telegram. Sahar explains catalogue matches, records buyer intent and offers a PayPal Sandbox intent-deposit checkout after explicit confirmation. Completed payments update the order and flag the conversation for an agent.
 
-[Open Sahar](https://dubai-whatsapp-agent.kioiskio.dev) · [Telegram](https://t.me/SaharDubaiAgentBot) · [Deployment guide](docs/DEPLOYMENT.md)
+[Open Sahar](https://sahar-agent.kioiskio.dev) · [Telegram](https://t.me/SaharDubaiAgentBot) · [Deployment guide](docs/DEPLOYMENT.md)
 
 Built for the PayPal AI Hackathon. The hosted application uses a real language model and PayPal Sandbox APIs. Listings and images are illustrative; payments use test funds. Payment does not establish a property reservation, escrow arrangement or ownership right.
 

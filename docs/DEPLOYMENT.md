@@ -12,6 +12,8 @@ npx wrangler d1 create sahar-agent
 
 Replace the placeholder `database_id` in `wrangler.toml` with the returned ID. Set `APP_BASE_URL` to the final HTTPS origin. Configure `ADMIN_EMAILS`, `EMAIL_FROM` and `TURNSTILE_SITE_KEY` for your deployment. A custom domain is optional; if you add one, update provider callback URLs and Turnstile's hostname allowlist together.
 
+The hosted demo uses `https://sahar-agent.kioiskio.dev`. Its legacy hostname remains configured: browser GET and HEAD requests redirect with their path and query intact, while API requests and provider callbacks continue to work at the original address. Keep both hostname routes and the Turnstile allowlist entries during migration. Session cookies are host-specific, so users sign in again on the new hostname; accounts, credits and orders remain in the same database. `run_worker_first` ensures redirects also apply to the homepage and existing static assets.
+
 For local development, copy `.dev.vars.example` to `.dev.vars` and set the local origin there. Apply migrations with `npx wrangler d1 migrations apply DB --local`. The default Vite port is 3000; use its actual printed origin if the port is occupied. Start with `npm run dev`.
 
 ## 2. Configure sign-in
