@@ -6,6 +6,7 @@ import type { PayPalEnvironment } from '../lib/paypal';
 import type { WhatsAppEnv } from '../lib/whatsapp';
 import type { TelegramEnv } from '../lib/telegram';
 import { sha256 } from '../lib/security';
+import { hasExplicitDepositConsent } from '../lib/payment-consent';
 import type { Listing, Message, Order } from '../types';
 import type { Locale } from '../i18n/locales';
 
@@ -45,6 +46,15 @@ const consentCopy: Record<Locale, string> = {
   fr: 'Sélectionnez un bien, puis répondez « confirmer acompte » pour créer un paiement PayPal Sandbox avec des fonds de test. Aucun débit sans votre approbation sur PayPal.',
   de: 'Wählen Sie zuerst ein Objekt und antworten Sie „Anzahlung bestätigen“, um einen PayPal-Sandbox-Checkout mit Testgeld zu erstellen. Keine Abbuchung ohne Ihre Zustimmung bei PayPal.',
   ar: 'اختر عقاراً أولاً ثم اكتب «تأكيد العربون» لإنشاء دفع PayPal Sandbox بأموال اختبارية. لن تُخصم أموال دون موافقتك على PayPal.'
+};
+
+const checkoutReadyCopy: Record<Locale, (listing: Listing) => string> = {
+  en: listing => `The ${listing.deposit_currency} ${(listing.deposit_cents / 100).toFixed(2)} intent-deposit checkout for ${listing.title} is ready. Open the checkout below to review the terms and approve using PayPal Sandbox test funds. Creating a checkout does not itself charge funds or reserve a real property.`,
+  'zh-CN': listing => `${listing.title} 的 ${listing.deposit_currency} ${(listing.deposit_cents / 100).toFixed(2)} 意向金结账已准备好。请打开下方结账页面，阅读条款，并使用 PayPal Sandbox 测试资金批准付款。创建结账本身不会扣款，也不代表真实房源已预订。`,
+  'zh-TW': listing => `${listing.title} 的 ${listing.deposit_currency} ${(listing.deposit_cents / 100).toFixed(2)} 意向金結帳已準備好。請開啟下方結帳頁面，閱讀條款，並使用 PayPal Sandbox 測試資金核准付款。建立結帳本身不會扣款，也不代表真實房源已預訂。`,
+  fr: listing => `Le paiement de l’acompte de ${listing.deposit_currency} ${(listing.deposit_cents / 100).toFixed(2)} pour ${listing.title} est prêt. Ouvrez le lien ci-dessous pour lire les conditions et approuver avec des fonds de test PayPal Sandbox. Créer ce paiement ne débite aucun fonds et ne réserve aucun bien réel.`,
+  de: listing => `Der Checkout für die Anzahlung von ${listing.deposit_currency} ${(listing.deposit_cents / 100).toFixed(2)} für ${listing.title} ist bereit. Öffnen Sie ihn unten, prüfen Sie die Bedingungen und bestätigen Sie mit PayPal-Sandbox-Testgeld. Das Erstellen des Checkouts belastet kein Guthaben und reserviert keine reale Immobilie.`,
+  ar: listing => `صفحة دفع عربون ${listing.title} بقيمة ${listing.deposit_currency} ${(listing.deposit_cents / 100).toFixed(2)} جاهزة. افتح صفحة الدفع أدناه لمراجعة الشروط والموافقة باستخدام أموال اختبار PayPal Sandbox. إنشاء صفحة الدفع وحده لا يخصم أموالاً ولا يحجز عقاراً حقيقياً.`
 };
 
 function findListing(text: string, listings: Listing[], selected: Listing | null): Listing | null {
@@ -167,9 +177,17 @@ export async function processConversationMessage(db: D1Database, env: Conversati
     conversation.locale = reply.locale;
     await db.prepare('UPDATE conversations SET locale = ? WHERE id = ?').bind(reply.locale, conversationId).run();
   }
-  if (!demo && reply.action === 'create_deposit' && (!selected || !/(?:confirm\s+(?:the\s+)?deposit|确认.{0,6}(?:意向金|定金|订金)|確認.{0,6}(?:意向金|訂金)|confirmer.{0,10}acompte|anzahlung.{0,10}bestätigen|تأكيد.{0,10}(?:العربون|الدفعة))/i.test(text))) {
-    reply.action = null;
-    reply.text = consentCopy[conversation.locale];
+  if (!demo) {
+    const namedListings = listings.filter(listing => text.toLowerCase().includes(listing.title.toLowerCase()) || text.toLowerCase().includes(listing.id.toLowerCase()));
+    const sameSelection = selected && !namedListings.some(listing => listing.id !== selected.id);
+    const confirmed = hasExplicitDepositConsent(text);
+    if (confirmed && sameSelection && reply.action !== 'handoff') {
+      reply.action = 'create_deposit';
+      reply.selectedListingId = selected.id;
+    } else if (reply.action === 'create_deposit') {
+      reply.action = null;
+      reply.text = consentCopy[conversation.locale];
+    }
   }
   const nextListing = reply.selectedListingId ? listings.find(listing => listing.id === reply.selectedListingId) ?? selected : findListing(text, listings, selected);
   const depositListing = reply.action === 'create_deposit' ? nextListing : null;
@@ -225,6 +243,7 @@ export async function processConversationMessage(db: D1Database, env: Conversati
         if (!checkoutUrl) throw new Error('Checkout link is unavailable; contact an authorised agent');
       }
       checkoutText = checkoutUrl ? checkoutCopy[conversation.locale](checkoutUrl) : null;
+      if (!demo && checkoutText) reply.text = checkoutReadyCopy[conversation.locale](depositListing);
     }
     stage = 'checkout';
   }
