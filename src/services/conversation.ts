@@ -7,6 +7,7 @@ import type { WhatsAppEnv } from '../lib/whatsapp';
 import type { TelegramEnv } from '../lib/telegram';
 import { sha256 } from '../lib/security';
 import { hasExplicitDepositConsent } from '../lib/payment-consent';
+import { telegramStatusCopy } from '../lib/telegram-status';
 import type { Listing, Message, Order } from '../types';
 import type { Locale } from '../i18n/locales';
 
@@ -131,7 +132,7 @@ async function addOutbound(
   const deliveryStatus = input.delivery === 'simulated' ? 'simulated' : input.delivery === 'web' ? 'delivered' : 'pending';
   await db.batch([
     db.prepare("INSERT OR IGNORE INTO messages (id, conversation_id, direction, sender_type, body, message_type, delivery_status, metadata_json, created_at) VALUES (?, ?, 'outbound', ?, ?, ?, ?, ?, ?)")
-      .bind(messageId, input.conversationId, input.messageType === 'checkout_link' ? 'system' : 'ai', input.body, input.messageType ?? 'text', deliveryStatus, input.metadata ? JSON.stringify(input.metadata) : null, timestamp),
+      .bind(messageId, input.conversationId, input.messageType === 'checkout_link' || input.messageType === 'assistant_status' ? 'system' : 'ai', input.body, input.messageType ?? 'text', deliveryStatus, input.metadata ? JSON.stringify(input.metadata) : null, timestamp),
     ...(input.delivery === 'external' ? [db.prepare("INSERT OR IGNORE INTO outbound_deliveries (id, conversation_id, message_id, recipient, body, status, attempts, max_attempts, next_attempt_at, last_error, external_message_id, created_at, updated_at) SELECT ?, conversation_id, id, ?, body, 'pending', 0, 5, ?, NULL, NULL, ?, ? FROM messages WHERE id = ?")
       .bind(`delivery_${messageId}`, input.recipient, timestamp, timestamp, timestamp, messageId)] : [])
   ]);
@@ -180,7 +181,25 @@ export async function processConversationMessage(db: D1Database, env: Conversati
   }
   await db.prepare('UPDATE conversations SET last_message_at = ?, updated_at = ? WHERE id = ?').bind(timestamp, timestamp, conversationId).run();
 
-  if (conversation.status === 'handoff' || conversation.status === 'closed' || !(await db.prepare('SELECT auto_reply_enabled FROM workspace_settings WHERE id = 1').first<{ auto_reply_enabled: number }>())?.auto_reply_enabled) {
+  const autoReplyEnabled = Boolean((await db.prepare('SELECT auto_reply_enabled FROM workspace_settings WHERE id = 1').first<{ auto_reply_enabled: number }>())?.auto_reply_enabled);
+  if (transport === 'telegram') {
+    const command = /^\/(start|resume)(?:@SaharDubaiAgentBot)?(?:\s.*)?$/i.exec(text)?.[1].toLowerCase();
+    const paused = conversation.status === 'handoff' || conversation.status === 'closed' || !autoReplyEnabled;
+    if (command || paused) {
+      let reason: 'handoff' | 'closed' | 'disabled' | 'resumed' | 'welcome';
+      if (!autoReplyEnabled) reason = 'disabled';
+      else if (conversation.status === 'closed') reason = 'closed';
+      else if (command === 'resume') {
+        // Only the customer's explicit command resumes a handoff. Never alter
+        // payment state, selection, or historical handoff timestamps here.
+        const resumed = await db.prepare("UPDATE conversations SET status = 'active', updated_at = ? WHERE id = ? AND status IN ('active', 'handoff')").bind(timestamp, conversationId).run();
+        reason = resumed.meta.changes ? 'resumed' : 'closed';
+      } else reason = conversation.status === 'handoff' ? 'handoff' : 'welcome';
+      await addOutbound(db, { conversationId, recipient: conversation.wa_id, body: telegramStatusCopy(conversation.locale, reason), messageType: 'assistant_status', metadata: { reason }, delivery, sourceId: externalMessageId ?? undefined });
+      return getSnapshot(db, conversationId, await getLatestOrder(db, conversationId), null);
+    }
+  }
+  if (conversation.status === 'handoff' || conversation.status === 'closed' || !autoReplyEnabled) {
     if (demo) {
       const snapshot = await getDemoSnapshot(db, conversationId);
       if (snapshot) return snapshot;

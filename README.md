@@ -27,7 +27,7 @@ Built for the PayPal AI Hackathon. The hosted application uses a real language m
 5. Approve using a **PayPal Sandbox Personal buyer account**, return and capture the approved payment. A merchant's own Business account cannot pay that merchant.
 6. Confirm **Paid**. An operator can inspect the associated order and handoff state.
 
-The Telegram bot supports the same enquiry and Sandbox payment workflow. Web credits and Telegram identities are separate; entering an email in chat does not link accounts. Request additional trial credits at [kioiskio01@gmail.com](mailto:kioiskio01@gmail.com).
+The Telegram bot supports the same enquiry and Sandbox payment workflow. After payment or a human-agent request, AI replies pause and subsequent messages receive a status explanation. Send `/resume` to explicitly resume AI replies while retaining the order and history; `/start` displays the current status without cancelling a handoff. Operator-disabled AI and closed conversations remain restricted. Web credits and Telegram identities are separate; entering an email in chat does not link accounts. Request additional trial credits at [kioiskio01@gmail.com](mailto:kioiskio01@gmail.com).
 
 ## Workspace navigation
 
