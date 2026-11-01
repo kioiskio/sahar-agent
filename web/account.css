@@ -37,14 +37,16 @@
 .workspace-item-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
 .workspace-item strong { font-size: 14px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .workspace-item time { flex: none; color: #7b877f; font-size: 12px; }
-.workspace-item p { margin: 4px 0 0; color: #65756e; font-size: 12px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.workspace-row { border-radius: 12px; }
+.workspace-item p { margin: 0; padding-inline-end: 32px; color: #65756e; font-size: 12px; line-height: 32px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.workspace-row { position: relative; border-radius: 12px; }
 .workspace-row:has(.workspace-item[aria-current='true']) { background: #e7f3ec; }
-.workspace-item-actions { display: flex; justify-content: flex-end; gap: 2px; padding: 0 6px 6px; }
+.workspace-item-actions { position: absolute; inset-inline-end: 6px; bottom: 8px; display: flex; }
 .workspace-item-actions .ant-btn.ant-btn-icon-only { flex: none; width: 32px; min-width: 32px; height: 32px; color: #718279; }
 .workspace-item-actions .ant-btn:hover, .workspace-item-actions .ant-btn:focus-visible { color: #276749; }
-.workspace-item-actions .ant-btn-dangerous:hover, .workspace-item-actions .ant-btn-dangerous:focus-visible { color: #c63e3e; }
-@media (pointer: coarse) { .workspace-item-actions .ant-btn.ant-btn-icon-only { width: 44px; min-width: 44px; height: 44px; } }
+@media (pointer: coarse) {
+  .workspace-item p { line-height: 44px; padding-inline-end: 44px; }
+  .workspace-item-actions .ant-btn.ant-btn-icon-only { width: 44px; min-width: 44px; height: 44px; }
+}
 .workspace-back { display: none; }
 .workspace-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .workspace-thread-head { flex: none; display: flex; align-items: center; gap: 8px; padding: 12px 20px; }

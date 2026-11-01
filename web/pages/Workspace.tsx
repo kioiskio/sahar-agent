@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Button, Dropdown, Grid, Input, Modal, Popconfirm, Spin, Tooltip } from 'antd';
-import { ArrowLeftOutlined, DeleteOutlined, EditOutlined, MenuOutlined } from '@ant-design/icons';
+import { Alert, Button, Dropdown, Grid, Input, Modal, Popconfirm, Spin } from 'antd';
+import { ArrowLeftOutlined, DeleteOutlined, EditOutlined, MenuOutlined, MoreOutlined } from '@ant-design/icons';
 import type { TextAreaRef } from 'antd/es/input/TextArea';
 import { useTranslation } from 'react-i18next';
 import { ApiError, api, type Credits, type SessionUser, type WebConversationSummary, type WebMessage, type WebSnapshot } from '../api';
@@ -259,21 +259,29 @@ function ConversationRow({ item, selected, locale, untitled, renameLabel, delete
   item: WebConversationSummary; selected: boolean; locale: string; untitled: string; renameLabel: string; deleteLabel: string; confirm: string;
   onOpen: () => void; onRename: () => void; onDelete: () => void;
 }) {
+  const { t } = useTranslation();
+  const [deleteOpen, setDeleteOpen] = useState(false);
   return <div className="workspace-row">
     <button type="button" className="workspace-item" aria-current={selected ? 'true' : undefined} onClick={onOpen}>
       <span className="workspace-item-top"><strong>{item.title || untitled}</strong><time dateTime={item.updated_at}>{when(item.updated_at, locale)}</time></span>
-      {item.preview && <p>{item.preview}</p>}
+      <p>{item.preview || '\u00a0'}</p>
     </button>
     <span className="workspace-item-actions">
-      <Tooltip title={renameLabel}>
-        <Button type="text" shape="circle" size="small" icon={<EditOutlined />} aria-label={renameLabel} onClick={onRename} />
-      </Tooltip>
-      <Tooltip title={deleteLabel}>
-        <Popconfirm title={confirm} okText={deleteLabel} onConfirm={onDelete}>
-          <Button type="text" shape="circle" size="small" danger icon={<DeleteOutlined />} aria-label={deleteLabel} />
-        </Popconfirm>
-      </Tooltip>
+      <Dropdown trigger={['click']} placement="bottomRight" menu={{
+        items: [
+          { key: 'rename', icon: <EditOutlined />, label: renameLabel },
+          { key: 'delete', icon: <DeleteOutlined />, label: deleteLabel, danger: true }
+        ],
+        onClick: ({ key, domEvent }) => {
+          domEvent.stopPropagation();
+          if (key === 'rename') onRename();
+          else if (key === 'delete') setDeleteOpen(true);
+        }
+      }}>
+        <Button type="text" shape="circle" size="small" icon={<MoreOutlined />} aria-label={`${t('ui.actions')} · ${item.title || untitled}`} />
+      </Dropdown>
     </span>
+    <Modal title={confirm} open={deleteOpen} okText={deleteLabel} cancelText={t('ui.cancel')} okButtonProps={{ danger: true }} onCancel={() => setDeleteOpen(false)} onOk={() => { setDeleteOpen(false); onDelete(); }} />
   </div>;
 }
 
