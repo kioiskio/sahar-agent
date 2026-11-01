@@ -11,6 +11,19 @@ import './console.css';
 import './account.css';
 import { theme } from './theme';
 
+window.addEventListener('vite:preloadError', event => {
+  // A previously open tab can reference a retired deployment chunk. Recover
+  // once without replaying any checkout API mutation or dropping URL state.
+  try {
+    const key = 'sahar:chunk-recovery:' + window.location.pathname;
+    const previous = Number(sessionStorage.getItem(key) ?? 0);
+    if (Date.now() - previous < 60_000) return;
+    sessionStorage.setItem(key, String(Date.now()));
+    event.preventDefault();
+    window.location.reload();
+  } catch { /* The route error boundary remains available when storage is blocked. */ }
+});
+
 function LocalizedApp() {
   const { i18n } = useTranslation();
   const isArabic = i18n.resolvedLanguage === 'ar';

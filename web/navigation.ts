@@ -17,9 +17,20 @@ export function afterSignIn(search: string, admin: boolean): string {
   return next;
 }
 
+export function checkoutPath(value: string): string | null {
+  try {
+    const url = new URL(value, window.location.origin);
+    const hosted = new Set(['https://sahar-agent.kioiskio.dev', 'https://dubai-whatsapp-agent.kioiskio.dev']);
+    const trusted = url.origin === window.location.origin || (hosted.has(window.location.origin) && hosted.has(url.origin));
+    if (!trusted || !url.pathname.startsWith('/checkout/') || url.username || url.password) return null;
+    return url.pathname + url.search + url.hash;
+  } catch { return null; }
+}
+
 export function checkoutFrom(url: string, destination: string): string {
-  const checkout = new URL(url, window.location.origin);
-  if (checkout.origin !== window.location.origin || !checkout.pathname.startsWith('/checkout/') || checkout.username || checkout.password) return url;
+  const safePath = checkoutPath(url);
+  if (!safePath) return url;
+  const checkout = new URL(safePath, window.location.origin);
   const safe = safeReturnPath(destination);
   if (safe) checkout.searchParams.set('return_to', safe);
   return checkout.pathname + checkout.search;

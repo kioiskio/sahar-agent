@@ -63,6 +63,16 @@ app.use(secureHeaders({
   crossOriginResourcePolicy: false,
   crossOriginOpenerPolicy: false
 }));
+app.use('*', async (c, next) => {
+  await next();
+  if (c.req.path.startsWith('/api/') || c.res.headers.get('Content-Type')?.includes('text/html')) c.header('Cache-Control', 'no-store');
+  // Cached legacy HTML may still request module scripts after the host move.
+  // Permit that known public-asset origin without opening credentialed APIs.
+  if (c.req.path.startsWith('/assets/') && c.req.header('Origin') === 'https://dubai-whatsapp-agent.kioiskio.dev') {
+    c.header('Access-Control-Allow-Origin', 'https://dubai-whatsapp-agent.kioiskio.dev');
+    c.header('Vary', 'Origin', { append: true });
+  }
+});
 app.route('/api', api);
 app.route('/webhook/whatsapp', whatsapp);
 app.route('/webhook/paypal', paypal);

@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Alert, Avatar, Badge, Button, Card, Checkbox, Col, Descriptions, Drawer, Empty, Form, Input, InputNumber, Layout, List, Menu, message, Modal, Progress, Result, Row, Segmented, Select, Space, Spin, Statistic, Steps, Switch, Table, Tag, Typography } from 'antd';
+import { Alert, Avatar, Badge, Button, Card, Col, Descriptions, Drawer, Empty, Form, Input, InputNumber, Layout, List, Menu, message, Modal, Progress, Row, Segmented, Select, Space, Spin, Statistic, Steps, Switch, Table, Tag, Typography } from 'antd';
 import type { InputRef, MenuProps } from 'antd';
 import { ArrowLeftOutlined, ArrowRightOutlined, BankOutlined, CheckOutlined, CloseOutlined, EditOutlined, PauseCircleOutlined, PlusOutlined, CommentOutlined, CreditCardOutlined, DashboardOutlined, DollarOutlined, HomeOutlined, LockOutlined, MenuOutlined, MessageOutlined, PlayCircleOutlined, RobotOutlined, SafetyCertificateOutlined, SendOutlined, SettingOutlined, ShopOutlined, TeamOutlined, ThunderboltFilled } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { ApiError, api, type Bootstrap, type CheckoutOrder, type Conversation, type ConversationDetail, type DemoSnapshot, type Listing, type ListingInput, type Message, type Order, type SettingsInput } from '../api';
+import { ApiError, api, type Bootstrap, type Conversation, type ConversationDetail, type DemoSnapshot, type Listing, type ListingInput, type Message, type Order, type SettingsInput } from '../api';
 import { languageNames, locales, type Locale } from '../i18n';
 import ListingCover from '../components/ListingCover';
 import BrandMark from '../components/BrandMark';
 import BuyerAvatar from '../components/BuyerAvatar';
 import type { Navigate } from '../App';
-import { checkoutFrom, checkoutReturn, loginPath, rememberCheckoutReturn } from '../navigation';
+import { checkoutFrom, checkoutPath, loginPath } from '../navigation';
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -27,13 +27,7 @@ function displayBuyer(waId: string, sandboxBuyer: string, demoBuyer: string) {
 }
 
 function validSandboxCheckoutUrl(value: string) {
-  try {
-    const url = new URL(value, window.location.origin);
-    if (url.origin !== window.location.origin || !url.pathname.startsWith('/checkout/')) return null;
-    return url.pathname + url.search + url.hash;
-  } catch {
-    return null;
-  }
+  return checkoutPath(value);
 }
 
 function ChatLog({ messages: items, loading = false, className = '', label }: { messages: Message[]; loading?: boolean; className?: string; label?: string }) {
@@ -398,99 +392,6 @@ function Demo({ id, navigate }: { id?: string; navigate: Navigate }) {
         </div></Col></Row></div></div>;
 }
 
-function Checkout({ orderId, navigate }: { orderId: string; navigate: Navigate }) {
-  const { t, i18n } = useTranslation();
-  const [order, setOrder] = useState<CheckoutOrder | null>(null);
-  const [isDemo, setIsDemo] = useState(false);
-  const [agreed, setAgreed] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [returnTo, setReturnTo] = useState('/workspace');
-  const search = window.location.search;
-  useEffect(() => {
-    let active = true;
-    const preferred = checkoutReturn(orderId, search);
-    if (preferred) {
-      rememberCheckoutReturn(orderId, preferred);
-      setReturnTo(preferred);
-    } else {
-      setReturnTo('/workspace');
-      void api.session().then(session => {
-        if (active) setReturnTo(session.user?.admin ? '/console/orders' : '/workspace');
-      }).catch(() => undefined);
-    }
-    return () => { active = false; };
-  }, [orderId, search]);
-  const params = new URLSearchParams(window.location.search);
-  const accessToken = params.get('access_token') ?? params.get('token') ?? '';
-  const paymentReturn = params.get('payment_return') === '1';
-  const paymentCancelled = params.get('payment_cancelled') === '1';
-  const returned = paymentReturn || paymentCancelled;
-  useEffect(() => {
-    let active = true;
-    setOrder(null);
-    setIsDemo(false);
-    setError('');
-    const load = async () => {
-      try {
-        const next = accessToken ? await api.getPaymentOrder(orderId, accessToken) : await api.getDemoCheckout(orderId);
-        if (!active) return;
-        setOrder(next.order);
-        setIsDemo(!accessToken);
-      } catch (cause) {
-        if (active) setError(cause instanceof Error ? cause.message : t('ui.error'));
-      }
-    };
-    void load();
-    return () => { active = false; };
-  }, [orderId, accessToken, t]);
-  const complete = async () => {
-    if (!agreed || !order) return;
-    setLoading(true);
-    setError('');
-    try {
-      if (isDemo) {
-        await api.completeDemoOrder(orderId);
-        navigate('/demo/' + order.conversation_id);
-      } else if (paymentReturn) {
-        const next = await api.capturePaymentOrder(orderId, accessToken);
-        setOrder(next.order);
-        setAgreed(false);
-      } else {
-        const next = await api.acceptPaymentTerms(orderId, accessToken);
-        setOrder(next.order);
-        if (next.order.approval_url) window.location.assign(next.order.approval_url);
-        else setError(t('ui.approvalMissing'));
-      }
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t('ui.error'));
-    } finally {
-      setLoading(false);
-    }
-  };
-  if (!order) return <div className="page-loading">{error ? <Alert type="error" message={error} /> : <Spin size="large" />}</div>;
-  const paid = order.status === 'paid';
-  const processing = order.status === 'processing';
-  const needsApproval = !isDemo && !paymentReturn;
-  const agreement = isDemo ? t('ui.depositAgreement') : t('ui.depositAgreementReal');
-  return <div className="checkout-shell"><Card className="checkout-panel">
-    <Space direction="vertical" size={22} style={{ width: '100%' }}>
-      <div className="checkout-brand"><Text strong>sahar.</Text>{isDemo ? <Tag color="orange">{t('ui.mock')}</Tag> : <Tag color="blue">{t('ui.paypal')}</Tag>}</div>
-      <Result status={paid ? 'success' : paymentCancelled ? 'warning' : 'info'} icon={paid ? <CheckOutlined /> : <CreditCardOutlined />} title={order.title} subTitle={order.area} />
-      <Statistic title={t('console.deposit')} value={money(order.amount_cents, order.currency, i18n.language)} />
-      <Status status={order.status} />
-      {order.terms && <Alert type="warning" showIcon message={order.terms} />}
-      {returned && !paid && <Alert type={paymentCancelled ? 'warning' : 'info'} showIcon message={t(paymentCancelled ? 'ui.paymentCancelled' : 'ui.paymentReturned')} />}
-      {!paid && !processing && <Checkbox checked={agreed} onChange={event => setAgreed(event.target.checked)}>{agreement}</Checkbox>}
-      {isDemo
-        ? <Button type="primary" size="large" block loading={loading} disabled={!agreed || paid} icon={<CheckOutlined />} onClick={() => void complete()}>{paid ? t('ui.statusPaid') : t('ui.demoPay')}</Button>
-        : <Button type="primary" size="large" block loading={loading} disabled={!agreed || paid || processing || order.status !== 'pending_payment' || !accessToken} icon={<CheckOutlined />} onClick={() => void complete()}>{paid ? t('ui.statusPaid') : processing ? t('ui.statusProcessing') : t(needsApproval ? 'ui.continueToPaypal' : 'ui.capturePayment')}</Button>}
-      {isDemo && <Text type="secondary">{t('console.noRealMoney')}</Text>}
-      {(isDemo || paid) && <Button block icon={<ArrowLeftOutlined />} onClick={() => navigate(isDemo ? '/demo/' + order.conversation_id : returnTo)}>{t(isDemo ? 'ui.back' : returnTo === '/console/orders' ? 'account.backToOrders' : returnTo.startsWith('/console/') ? 'account.backToAgentWorkspace' : returnTo === '/admin' ? 'account.admin' : 'account.backToChat')}</Button>}
-      {error && <Alert type="error" message={error} />}
-    </Space>
-  </Card></div>;
-}
 
 export default function Console({ path, navigate }: { path: string; navigate: Navigate }) {
   const { t } = useTranslation();
@@ -499,7 +400,7 @@ export default function Console({ path, navigate }: { path: string; navigate: Na
   const [allowed, setAllowed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < MOBILE_BREAKPOINT);
-  const isPublicFlow = path.startsWith('/demo') || path.startsWith('/checkout/');
+  const isPublicFlow = path.startsWith('/demo');
   const refresh = useCallback(async () => {
     setError('');
     try { setData(await api.bootstrap()); }
@@ -529,7 +430,6 @@ export default function Console({ path, navigate }: { path: string; navigate: Na
   }, [refresh, isPublicFlow, navigate, t]);
   const logout = () => { void api.logout().finally(() => navigate('/')); };
   if (path.startsWith('/demo')) return <Demo id={path.split('/')[2]} navigate={navigate} />;
-  if (path.startsWith('/checkout/')) return <Checkout orderId={path.split('/')[2]} navigate={navigate} />;
   if (!allowed) return <div className="page-loading">{error ? <Card style={{ width: 420, maxWidth: '100%' }}><Alert type="warning" showIcon message={error} /><Button type="primary" style={{ marginTop: 16 }} onClick={() => navigate('/workspace')}>{t('account.buyerChat')}</Button></Card> : <Spin size="large" />}</div>;
   if (!data) return <div className="page-loading">{error ? <Alert type="error" message={error} action={<Button onClick={() => void refresh().catch(() => undefined)}>{t('ui.refresh')}</Button>} /> : <Spin size="large" />}</div>;
   const active = ['overview', 'conversations', 'listings', 'orders', 'settings'].includes(path.split('/')[2]) ? path.split('/')[2] : 'overview';

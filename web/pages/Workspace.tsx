@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { ApiError, api, type Credits, type SessionUser, type WebConversationSummary, type WebMessage, type WebSnapshot } from '../api';
 import BrandMark from '../components/BrandMark';
 import type { Navigate } from '../App';
-import { checkoutFrom, loginPath } from '../navigation';
+import { checkoutFrom, checkoutPath, loginPath } from '../navigation';
 
 const CONTACT = 'mailto:kioiskio01@gmail.com?subject=Sahar%20trial%20credits';
 
@@ -281,7 +281,7 @@ function MessageBubble({ message, conversationId }: { message: WebMessage; conve
     if (candidate) {
       try {
         const url = new URL(candidate, window.location.origin);
-        if (url.origin === window.location.origin && url.pathname.startsWith('/checkout/') && !url.username && !url.password) {
+        if (checkoutPath(url.href)) {
           return <div className="account-bubble"><p>{message.body.replace(candidate, '').trim()}</p><Button type="primary" href={checkoutFrom(url.href, '/workspace/' + conversationId)}>{t('ui.checkout')}</Button></div>;
         }
       } catch { /* Invalid checkout URLs remain plain text. */ }

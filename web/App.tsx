@@ -8,11 +8,12 @@ import BrandMark from './components/BrandMark';
 import './home.css';
 
 const Console = lazy(() => import('./pages/Console'));
-import DemoWorkspace from './pages/DemoWorkspace';
-import Docs from './pages/Docs';
-import Login from './pages/Login';
-import Workspace from './pages/Workspace';
-import Admin from './pages/Admin';
+const Checkout = lazy(() => import('./pages/Checkout'));
+const DemoWorkspace = lazy(() => import('./pages/DemoWorkspace'));
+const Docs = lazy(() => import('./pages/Docs'));
+const Login = lazy(() => import('./pages/Login'));
+const Workspace = lazy(() => import('./pages/Workspace'));
+const Admin = lazy(() => import('./pages/Admin'));
 
 class RouteBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
@@ -62,13 +63,15 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
+  const isCheckout = path.startsWith('/checkout/');
   const isConsole = path.startsWith('/console') || path.startsWith('/demo') || path.startsWith('/checkout/');
-  const loading = <div className="page-loading"><Spin size="large" /></div>;
-  if (path === '/login') return <Login navigate={navigate} />;
-  if (path.startsWith('/workspace')) return <Workspace path={path} navigate={navigate} />;
-  if (path.startsWith('/admin')) return <Admin navigate={navigate} />;
-  if (path === '/docs') return <Docs navigate={navigate} />;
-  if (path.startsWith('/demo/workspace')) return <RouteBoundary key={path}><DemoWorkspace path={path} navigate={navigate} /></RouteBoundary>;
+  const loading = <div className="page-loading" role="status"><Spin size="large" /><span>{t('ui.loading')}</span></div>;
+  if (isCheckout) return <RouteBoundary key={path}><Suspense fallback={loading}><Checkout orderId={path.split('/')[2]} navigate={navigate} /></Suspense></RouteBoundary>;
+  if (path === '/login') return <RouteBoundary key="login"><Suspense fallback={loading}><Login navigate={navigate} /></Suspense></RouteBoundary>;
+  if (path.startsWith('/workspace')) return <RouteBoundary key="workspace"><Suspense fallback={loading}><Workspace path={path} navigate={navigate} /></Suspense></RouteBoundary>;
+  if (path.startsWith('/admin')) return <RouteBoundary key="admin"><Suspense fallback={loading}><Admin navigate={navigate} /></Suspense></RouteBoundary>;
+  if (path === '/docs') return <RouteBoundary key="docs"><Suspense fallback={loading}><Docs navigate={navigate} /></Suspense></RouteBoundary>;
+  if (path.startsWith('/demo/workspace')) return <RouteBoundary key={path}><Suspense fallback={loading}><DemoWorkspace path={path} navigate={navigate} /></Suspense></RouteBoundary>;
   if (isConsole) return <RouteBoundary key={path}><Suspense fallback={loading}><Console path={path} navigate={navigate}/></Suspense></RouteBoundary>;
 
   const navLinks = <nav className="main-nav" aria-label="Main navigation">
