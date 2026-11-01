@@ -110,4 +110,3 @@ export default function Checkout({ orderId, navigate }: { orderId: string; navig
     </Space>
   </Card></div>;
 }
-
