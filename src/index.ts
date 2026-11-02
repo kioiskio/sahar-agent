@@ -7,6 +7,7 @@ import paypal from './routes/paypal';
 import telegram from './routes/telegram';
 import api from './routes/api';
 import checkout from './routes/checkout';
+import { staticAsset } from './lib/static-assets';
 import { runMaintenance } from './services/maintenance';
 import { publicError } from './lib/security';
 import type { SecretBinding } from './lib/ai';
@@ -78,6 +79,7 @@ app.use('*', async (c, next) => {
 });
 app.route('/api', api);
 app.route('/checkout', checkout);
+app.on(['GET', 'HEAD'], '/assets/*', c => staticAsset(c.req.raw, c.env.ASSETS));
 app.route('/webhook/whatsapp', whatsapp);
 app.route('/webhook/paypal', paypal);
 app.route('/webhook/telegram', telegram);
@@ -89,16 +91,20 @@ app.onError((error, c) => {
 });
 app.notFound(async c => {
   if (c.req.path.startsWith('/api/') || c.req.path.startsWith('/webhook/')) return c.json({ error: 'Not found' }, 404);
-  // Asset requests for client routes such as /workspace have no file. Serve the app shell.
+  if (!['GET', 'HEAD'].includes(c.req.method)) return c.text('Not found', 404);
+  if (/\.(?:js|mjs|css|json|svg|png|jpe?g|webp|woff2?)(?:$)/i.test(c.req.path)) return staticAsset(c.req.raw, c.env.ASSETS);
+  // Only application routes may receive the HTML shell, never file requests.
+  const applicationRoute = /^\/(?:$|login\/?$|admin\/?$|docs\/?$|workspace(?:\/[^/.]+)*\/?$|console(?:\/[^/.]+)*\/?$|demo(?:\/[^/.]+)*\/?$|checkout\/[^/.]+\/?$)/.test(c.req.path);
   const shellUrl = new URL(c.req.url);
   shellUrl.pathname = '/index.html';
   shellUrl.search = '';
   try {
-    const direct = await c.env.ASSETS.fetch(c.req.raw);
-    if (direct.ok) return new Response(direct.body, direct);
+    const direct = await c.env.ASSETS.fetch(new Request(c.req.url, { method: c.req.method }));
+    if (direct.ok || (direct.status >= 300 && direct.status < 400)) return new Response(direct.body, direct);
   } catch (error) {
     console.error('Asset lookup failed', { message: error instanceof Error ? error.message : 'asset lookup failed' });
   }
+  if (!applicationRoute) return c.text('Not found', 404);
   const shell = await c.env.ASSETS.fetch(new Request(shellUrl, { method: 'GET' }));
   return new Response(shell.body, { status: shell.status, headers: { 'Content-Type': shell.headers.get('Content-Type') ?? 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' } });
 });

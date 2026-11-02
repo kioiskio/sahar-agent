@@ -20,5 +20,7 @@ export default defineConfig({
       }
     }
   }],
+  // Use fresh resource URLs rather than reusing browser caches containing HTML.
+  build: { assetsDir: 'assets/app' },
   server: { port: 3000 }
 });

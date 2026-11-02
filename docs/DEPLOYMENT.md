@@ -16,6 +16,8 @@ The hosted demo uses `https://sahar-agent.kioiskio.dev`. Its legacy hostname rem
 
 For local development, copy `.dev.vars.example` to `.dev.vars` and set the local origin there. Apply migrations with `npx wrangler d1 migrations apply DB --local`. The default Vite port is 3000; use its actual printed origin if the port is occupied. Start with `npm run dev`.
 
+Keep `assets.not_found_handling = "none"`. The Worker supplies the application shell for browser routes and handles static assets separately. Missing scripts return a non-cacheable error rather than homepage HTML; JavaScript and CSS responses are checked for their expected media types. Builds place hashed resources under `/assets/app/` and embed the shared stylesheet in the HTML.
+
 ## 2. Configure sign-in
 
 Create a Turnstile widget whose allowed hostname matches your application. Set the public site key in configuration and the secret key as a Worker secret. Sign-in requires an `EMAIL` binding exposing the `send({ to, from, subject, text })` interface defined in `src/lib/mailer.ts`.
